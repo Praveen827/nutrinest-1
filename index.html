@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>NutriNest Bakery</title>
+  <style>
+    body { 
+      font-family: Arial, sans-serif; 
+      text-align: center; 
+      background: url("https://images.unsplash.com/photo-1509042239860-f550ce710b93?q=80&w=1600") no-repeat center center/cover;
+      background-attachment: fixed;
+      color: #fff;
+    }
+    h1 { 
+      color: #ffebcd; 
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.7); 
+    }
+    .box { 
+      margin: 20px auto; 
+      padding: 20px; 
+      width: 460px; 
+      background: rgba(0,0,0,0.6); 
+      border-radius: 8px; 
+      box-shadow: 0 0 10px rgba(0,0,0,0.6); 
+      text-align: left;
+    }
+    label { display: block; margin-top: 10px; font-weight: bold; }
+    input[type="number"] { width: 60px; padding: 3px; margin-left: 10px; }
+    button { 
+      margin: 10px 5px; 
+      padding: 8px 12px; 
+      border: none; 
+      border-radius: 5px; 
+      background: #ffcc00; 
+      cursor: pointer; 
+      font-weight: bold; 
+    }
+    button:hover { background: #ffaa00; }
+    ul { list-style: none; padding: 0; }
+    li { 
+      background: rgba(255,255,255,0.8); 
+      margin: 5px; 
+      padding: 10px; 
+      border-radius: 5px; 
+      color: #000; 
+      font-weight: bold;
+    }
+    .busy { background: rgba(255, 102, 102, 0.9) !important; color: #fff; }
+    .category { margin-top: 15px; padding: 10px; border: 1px solid #ccc; border-radius: 5px; background: rgba(255,255,255,0.1); }
+    .feedback { margin-top: 10px; padding: 10px; background: rgba(255,255,255,0.9); border-radius: 8px; color: #000; }
+    .emoji { cursor: pointer; font-size: 22px; margin: 0 3px; }
+    .emoji.selected { border-bottom: 2px solid #333; }
+  </style>
+</head>
+<body>
+  <h1>🍩 NutriNest Bakery</h1>
+  <div class="box">
+    <label>Choose Table:</label>
+    <select id="table"></select><br>
+
+    <label>Select Items (enter quantity):</label>
+    <div>
+      Coffee (₹25) <input type="number" id="Coffee" min="0" value="0"><br>
+      Tea (₹15) <input type="number" id="Tea" min="0" value="0"><br>
+      Snacks (₹100) <input type="number" id="Snacks" min="0" value="0"><br>
+      Cake (₹55) <input type="number" id="Cake" min="0" value="0"><br>
+      Pastry (₹60) <input type="number" id="Pastry" min="0" value="0"><br>
+      Ponda (₹20) <input type="number" id="Ponda" min="0" value="0"><br>
+      Masal Ponda (₹35) <input type="number" id="Masal Ponda" min="0" value="0"><br>
+      Veg Puffs (₹20) <input type="number" id="Veg Puffs" min="0" value="0"><br>
+      Egg Puffs (₹35) <input type="number" id="Egg Puffs" min="0" value="0"><br>
+      Cool Drinks Bottle (₹55) <input type="number" id="Cool Drinks Bottle" min="0" value="0"><br>
+    </div>
+
+    <!-- Fresh Juice Section -->
+    <div class="category">
+      <b>🥤 Fresh Juice</b><br>
+      Apple Juice (₹40) <input type="number" id="Apple Juice" min="0" value="0"><br>
+      Pomegranate Juice (₹120) <input type="number" id="Pomegranate Juice" min="0" value="0"><br>
+      Orange Juice (₹50) <input type="number" id="Orange Juice" min="0" value="0"><br>
+      Lemon Juice (₹25) <input type="number" id="Lemon Juice" min="0" value="0"><br>
+
+      <div style="margin-top:8px;">
+        <label>Ice Option:</label>
+        <input type="radio" name="ice" value="With Ice" checked> With Ice 
+        <input type="radio" name="ice" value="Without Ice"> Without Ice
+      </div>
+    </div>
+
+    <button onclick="book()">Book Now</button>
+  </div>
+
+  <h2>📋 Current Bookings</h2>
+  <ul id="bookings"></ul>
+
+  <!-- QR Code Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+  <script>
+    const bookings = {};
+    const prices = {
+      "Tea": 15,
+      "Coffee": 25,
+      "Cake": 55,
+      "Snacks": 100,
+      "Pastry": 60,
+      "Ponda": 20,
+      "Masal Ponda": 35,
+      "Veg Puffs": 20,
+      "Egg Puffs": 35,
+      "Cool Drinks Bottle": 55,
+      "Apple Juice": 40,
+      "Pomegranate Juice": 120,
+      "Orange Juice": 50,
+      "Lemon Juice": 25
+    };
+
+    // Create 50 tables dynamically
+    const tableSelect = document.getElementById("table");
+    for (let i = 1; i <= 50; i++) {
+      const opt = document.createElement("option");
+      opt.value = "Table " + i;
+      opt.textContent = "Table " + i;
+      tableSelect.appendChild(opt);
+    }
+
+    function book() {
+      const table = document.getElementById("table").value;
+
+      if (bookings[table]) {
+        alert(table + " is already occupied. Please select another table.");
+        return;
+      }
+
+      const items = [];
+      let hasOrder = false;
+
+      Object.keys(prices).forEach(item => {
+        const qty = parseInt(document.getElementById(item).value) || 0;
+        if (qty > 0) {
+          hasOrder = true;
+          let itemName = item;
+          if (item.includes("Juice")) {
+            const iceOption = document.querySelector('input[name="ice"]:checked').value;
+            itemName += " (" + iceOption + ")";
+          }
+          items.push({ name: itemName, qty: qty });
+        }
+      });
+
+      if (!hasOrder) {
+        alert("Please order at least one item.");
+        return;
+      }
+
+      bookings[table] = items;
+      showBookings();
+
+      // Reset all counts
+      Object.keys(prices).forEach(item => document.getElementById(item).value = 0);
+      document.querySelector('input[name="ice"][value="With Ice"]').checked = true;
+    }
+
+    function release(table) {
+      delete bookings[table];
+      showBookings();
+    }
+
+    function setRating(el, name, val) {
+      document.querySelectorAll(`[data-item='${name}']`).forEach(e => e.classList.remove("selected"));
+      el.classList.add("selected");
+      console.log(`Feedback for ${name}: ${val}`);
+    }
+
+    function showBookings() {
+      const list = document.getElementById("bookings");
+      list.innerHTML = "";
+
+      Object.keys(bookings).forEach(table => {
+        const orders = bookings[table];
+        let total = 0;
+
+        const orderDetails = orders.map(order => {
+          const baseName = order.name.replace(" (With Ice)", "").replace(" (Without Ice)", "");
+          const itemTotal = prices[baseName] * order.qty;
+          total += itemTotal;
+          return `${order.name} ×${order.qty} (₹${itemTotal})`;
+        }).join(", ");
+
+        const li = document.createElement("li");
+        li.className = "busy";
+        li.innerHTML = `<b>${table}</b><br> Orders: ${orderDetails}
+          <br><b>Total: ₹${total}</b>
+          <div id="qr_${table}" style="margin:10px;"></div>
+          <button onclick="release('${table}')">Release Table</button>
+          <div class="feedback">
+            <h4>📝 Feedback for ${table}</h4>
+            ${orders.map(o => `
+              <div>
+                ${o.name} ×${o.qty}<br>
+                <span class="emoji" data-item="${table}_${o.name}" onclick="setRating(this,'${table}_${o.name}','😡')">😡</span>
+                <span class="emoji" data-item="${table}_${o.name}" onclick="setRating(this,'${table}_${o.name}','😟')">😟</span>
+                <span class="emoji" data-item="${table}_${o.name}" onclick="setRating(this,'${table}_${o.name}','😐')">😐</span>
+                <span class="emoji" data-item="${table}_${o.name}" onclick="setRating(this,'${table}_${o.name}','🙂')">🙂</span>
+                <span class="emoji" data-item="${table}_${o.name}" onclick="setRating(this,'${table}_${o.name}','🤩')">🤩</span>
+              </div>
+            `).join("")}
+          </div>`;
+        list.appendChild(li);
+
+        // Generate QR code with library
+        const qrDiv = document.getElementById(`qr_${table}`);
+        qrDiv.innerHTML = "";
+        new QRCode(qrDiv, {
+          text: `Payment for ${table} : ₹${total}`,
+          width: 150,
+          height: 150
+        });
+      });
+
+      if (Object.keys(bookings).length === 0) {
+        list.innerHTML = "<li>No active bookings</li>";
+      }
+    }
+  </script>
+</body>
+</html>
